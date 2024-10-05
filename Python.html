@@ -1,0 +1,273 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+<meta charset="utf-8" />  
+<meta name="viewport" content="width=device-width, initial-scale=1" />  
+<title>Hello World!</title>  
+<!-- linking to PyScript assets -->  
+<link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />  
+<script defer src="https://pyscript.net/alpha/pyscript.js"></script>  
+</head>  
+<body>  
+<py-script>
+from tkinter import *
+from PIL import Image, ImageTk
+import random
+import time
+
+window = Tk()
+window.geometry("600x400")
+window.title("Money Game")
+window.configure(bg="black")
+window.resizable(0, 0)
+
+canvas = Canvas(window, width=500, height=330, bg="green", highlightthickness=0)
+canvas.place(x=50, y=35)
+
+clicks = 1
+autoclick = 0
+score = 0
+label_x = 250
+moved = False
+moved2 = False
+purchase_moved = False
+purchase_moved2 = False
+purchase_moved3 = False
+purchases = 0
+purchases2 = 0
+purchases3 = 0
+x_purchase = 190
+x_purchase2 = 340
+x_purchase3 = 490
+started = False
+cost = 300
+
+def update_score():
+    global score, label_x, moved, moved2
+    score += clicks
+    score = round(score, 2)
+    score_label.config(text=f"Score: {score}")
+
+    if score >= 50:
+        buy_button.config(bg="darkgoldenrod", activebackground="darkgoldenrod", relief="raised")
+        purchase_label.config(bg="darkgoldenrod")
+    else:
+        buy_button.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label.config(bg="grey")
+    
+    if score >= 150:
+        buy_button2.config(bg="darkgoldenrod", activebackground="darkgoldenrod", relief="raised")
+        purchase_label2.config(bg="darkgoldenrod")
+    else:
+        buy_button2.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label2.config(bg="grey")
+
+    if score >= cost:
+        buy_button3.config(bg="darkgoldenrod", activebackground="darkgoldenrod", relief="raised")
+        purchase_label3.config(bg="darkgoldenrod")
+    else:
+        buy_button3.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label3.config(bg="grey")
+
+    if score >= 10 and not moved:
+        label_x -= 5
+        score_label.place(x=label_x, y=35)
+        moved = True
+    if score >= 100 and not moved2:
+        label_x -= 5
+        score_label.place(x=label_x, y=35)
+        moved2 = True
+
+def purchase_hacks():
+    global clicks
+    clicks += 100
+    
+def purchase_plus_one():
+    global score, clicks, purchases, moved, label_x, x_purchase, purchase_moved, moved2
+    if score >= 50:
+        score -= 50
+        score_label.config(text=f"Score: {score}")
+        clicks += 1
+        purchases += 1
+        purchase_label.config(text=purchases)
+
+    if score < 50:
+        buy_button.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label.config(bg="grey")
+    
+    if score < 150:
+        buy_button2.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label2.config(bg="grey")
+
+    if score < cost:
+        buy_button3.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label3.config(bg="grey")
+
+    if purchases >= 10 and not purchase_moved:
+        x_purchase -= 10
+        purchase_label.place(x=x_purchase, y=324)
+        purchase_moved = True
+    
+    if score < 10 and moved:
+        label_x += 5
+        score_label.place(x=label_x, y=35)
+        moved = False
+
+    if score < 100 and moved2:
+        label_x += 5
+        score_label.place(x=label_x, y=35)
+        moved2 = False
+
+def purchase_auto_click():
+    global score, autoclick, moved, label_x, x_purchase2, purchase_moved2, started, moved2, purchases2
+    if score >= 150:
+        score -= 150
+        score_label.config(text=f"Score: {score}")
+        autoclick += 1
+        purchases2 += 1
+        purchase_label2.config(text=purchases2)
+    
+    if autoclick == 1 and not started:
+        start_autoclicker()
+        started = True
+
+    if score < 50:
+        buy_button.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label.config(bg="grey")
+    
+    if score < 150:
+        buy_button2.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label2.config(bg="grey")
+
+    if score < cost:
+        buy_button3.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label3.config(bg="grey")
+
+    if autoclick >= 10 and not purchase_moved2:
+        x_purchase2 -= 10
+        purchase_label2.place(x=x_purchase2, y=324)
+        purchase_moved2 = True
+    
+    if score < 10 and moved:
+        label_x += 5
+        score_label.place(x=label_x, y=35)
+        moved = False
+        
+    if score < 100 and moved2:
+        label_x += 5
+        score_label.place(x=label_x, y=35)
+        moved2 = False
+
+def purchase_multiplier():
+    global score, clicks, purchases3, moved, label_x, x_purchase3, purchase_moved3, moved2, autoclick, cost
+    if score >= cost:
+        score -= cost
+        score = int(score)
+        score_label.config(text=f"Score: {score}")
+        clicks *= 1.2
+        autoclick *= 1.2
+        purchases3 += 1
+        purchase_label3.config(text=purchases3)
+        cost *= 1.2
+        cost = int(cost)
+        buy_button3.config(text=f"1.2x All Clicks\n{cost}")
+
+    if score < 50:
+        buy_button.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label.config(bg="grey")
+
+    if score < 150:
+        buy_button2.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label2.config(bg="grey")
+
+    if score < cost:
+        buy_button3.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label3.config(bg="grey")
+     
+    if purchases3 >= 10 and not purchase_moved3:
+        x_purchase3 -= 10
+        purchase_label3.place(x=x_purchase3, y=324)
+        purchase_moved3 = True
+    
+    if score < 10 and moved:
+        label_x += 5
+        score_label.place(x=label_x, y=35)
+        moved = False
+
+    if score < 100 and moved2:
+        label_x += 5
+        score_label.place(x=label_x, y=35)
+        moved2 = False
+
+def start_autoclicker():
+    global score, autoclick, moved, label_x, moved2
+    if autoclick > 0:
+        score += autoclick
+        score = round(score, 2)
+        score_label.config(text=f"Score: {score}")
+    if score >= 10 and not moved:
+        label_x -= 5
+        score_label.place(x=label_x, y=35)
+        moved = True
+    if score >= 100 and not moved2:
+        label_x -= 5
+        score_label.place(x=label_x, y=35)
+        moved2 = True
+    if score >= 50:
+        buy_button.config(bg="darkgoldenrod", activebackground="darkgoldenrod", relief="raised")
+        purchase_label.config(bg="darkgoldenrod")
+    else:
+        buy_button.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label.config(bg="grey")
+    
+    if score >= 150:
+        buy_button2.config(bg="darkgoldenrod", activebackground="darkgoldenrod", relief="raised")
+        purchase_label2.config(bg="darkgoldenrod")
+    else:
+        buy_button2.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label2.config(bg="grey")
+
+    if score >= cost:
+        buy_button3.config(bg="darkgoldenrod", activebackground="darkgoldenrod", relief="raised")
+        purchase_label3.config(bg="darkgoldenrod")
+    else:
+        buy_button3.config(bg="grey", activebackground="grey", relief="sunken")
+        purchase_label3.config(bg="grey")
+
+    window.after(1000, start_autoclicker)
+
+original_image = Image.open('Money.png')
+resized_image = original_image.resize((150, 150), Image.LANCZOS)
+click_btn = ImageTk.PhotoImage(resized_image)
+
+roll_button = Button(window, image=click_btn, borderwidth=0, activebackground="green", bg="green", command=update_score)
+roll_button.place(x=225, y=120)
+
+score_label = Label(window, text=f"Score: {score}", font=("Arial", 18), bg="darkgoldenrod", fg="black")
+score_label.place(x=label_x, y=35)
+
+buy_button = Button(window, text=f"+1 Click Power\n50", width=12, activebackground="grey", relief="sunken", height=2, font=("Arial", 13), bg="grey", bd=2, command=purchase_plus_one)
+buy_button.place(x=90, y=300)
+
+buy_button2 = Button(window, text=f"Auto Click\n150", width=12, activebackground="grey", relief="sunken", height=2, font=("Arial", 13), bg="grey", bd=2, command=purchase_auto_click)
+buy_button2.place(x=240, y=300)
+
+buy_button3 = Button(window, text=f"1.2x All Clicks\n{cost}", width=12, activebackground="grey", relief="sunken", height=2, font=("Arial", 13), bg="grey", bd=2, command=purchase_multiplier)
+buy_button3.place(x=390, y=300)
+
+purchase_label = Label(window, text=purchases, font=("Arial", 12), bg="grey", fg="black")
+purchase_label.place(x=x_purchase, y=324)
+
+purchase_label2 = Label(window, text=autoclick, font=("Arial", 12), bg="grey", fg="black")
+purchase_label2.place(x=x_purchase2, y=324)
+
+purchase_label3 = Label(window, text=autoclick, font=("Arial", 12), bg="grey", fg="black")
+purchase_label3.place(x=x_purchase3, y=324)
+
+hack_button = Button(window, width=2, relief='flat', borderwidth=0, height=1, font=("Arial", 13), bg="green", bd=2, command=purchase_hacks)
+hack_button.place(x=50, y=35)
+
+window.mainloop()
+</py-script>  
+</body>  
+</html>  
