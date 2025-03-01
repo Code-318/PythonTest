@@ -58,172 +58,127 @@
             <ol id="leaderboardList"></ol>
         </div>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
-
-<script>
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        databaseURL: "YOUR_DATABASE_URL",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const gameOverScreen = document.getElementById("gameOverScreen");
-    const finalScoreDisplay = document.getElementById("finalScore");
-    const playerNameInput = document.getElementById("playerName");
-    const leaderboardList = document.getElementById("leaderboardList");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let circle = {
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: 20,
-        hitboxRadius: 50,
-        speedX: 0,
-        speedY: 0,
-        acc: 0.02,
-        speedMul: 0.98,
-        bounceStr: 1.0
-    };
-
-    let mouse = { x: -100, y: -100 };
-    let gameRunning = true;
-    let startTime;
-    let score = 0;
-    
-    window.addEventListener("mousemove", (e) => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-    });
-
-    function update() {
-        if (!gameRunning) return;
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const finalScoreDisplay = document.getElementById("finalScore");
+        const playerNameInput = document.getElementById("playerName");
+        const leaderboardList = document.getElementById("leaderboardList");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         
-        let dx = mouse.x - circle.x;
-        let dy = mouse.y - circle.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance <= circle.hitboxRadius) {
-            gameOver();
-            return;
-        }
-        
-        circle.speedX *= circle.speedMul;
-        circle.speedY *= circle.speedMul;
-        
-        let randomOffsetX = (Math.random() - 0.5) * 1;
-        let randomOffsetY = (Math.random() - 0.5) * 1;
-        
-        circle.speedX += (dx + randomOffsetX) * circle.acc;
-        circle.speedY += (dy + randomOffsetY) * circle.acc;
-        
-        circle.x += circle.speedX;
-        circle.y += circle.speedY;
-        
-        if (circle.x < circle.radius) {
-            circle.x = circle.radius;
-            circle.speedX = -circle.speedX * circle.bounceStr;
-        } else if (circle.x > canvas.width - circle.radius) {
-            circle.x = canvas.width - circle.radius;
-            circle.speedX = -circle.speedX * circle.bounceStr;
-        }
-        
-        if (circle.y < circle.radius) {
-            circle.y = circle.radius;
-            circle.speedY = -circle.speedY * circle.bounceStr;
-        } else if (circle.y > canvas.height - circle.radius) {
-            circle.y = canvas.height - circle.radius;
-            circle.speedY = -circle.speedY * circle.bounceStr;
-        }
-        
-        score = ((Date.now() - startTime) / 1000).toFixed(2);
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
-        ctx.beginPath();
-        ctx.arc(circle.x, circle.y, circle.hitboxRadius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.fillStyle = "blue";
-        ctx.beginPath();
-        ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.fillStyle = "white";
-        ctx.font = "20px Arial";
-        ctx.fillText(`Score: ${score} sec`, 20, 30);
-    }
-
-    function gameLoop() {
-        update();
-        draw();
-        if (gameRunning) {
-            requestAnimationFrame(gameLoop);
-        }
-    }
-
-    function gameOver() {
-        gameRunning = false;
-        gameOverScreen.style.display = "flex";
-        finalScoreDisplay.textContent = score;
-    }
-
-    function submitScore() {
-        const playerName = playerNameInput.value || "Anonymous";
-        
-        // Save the score to Firebase
-        const scoreData = {
-            name: playerName,
-            score: score
+        let circle = {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: 20,
+            hitboxRadius: 50,
+            speedX: 0,
+            speedY: 0,
+            acc: 0.02,
+            speedMul: 0.98,
+            bounceStr: 1.0
         };
-        
-        const leaderboardRef = database.ref("leaderboard");
-        leaderboardRef.push(scoreData);
-        
-        // Refresh leaderboard
-        updateLeaderboard();
-    }
 
-    function restartGame() {
-        gameOverScreen.style.display = "none";
-        circle.x = Math.random() * canvas.width;
-        circle.y = Math.random() * canvas.height;
-        circle.speedX = 0;
-        circle.speedY = 0;
-        gameRunning = true;
-        startTime = Date.now();
-        gameLoop();
-    }
-
-    function updateLeaderboard() {
-        const leaderboardRef = database.ref("leaderboard");
-        leaderboardRef.orderByChild("score").limitToLast(10).once("value", (snapshot) => {
-            leaderboardList.innerHTML = "";
-            const scores = snapshot.val();
-            const sortedScores = Object.values(scores).sort((a, b) => b.score - a.score);
-            
-            sortedScores.forEach((entry) => {
-                const li = document.createElement("li");
-                li.textContent = `${entry.name}: ${entry.score} sec`;
-                leaderboardList.appendChild(li);
-            });
+        let mouse = { x: -100, y: -100 };
+        let gameRunning = true;
+        let startTime;
+        let score = 0;
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        
+        window.addEventListener("mousemove", (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
         });
-    }
 
-    restartGame();
-</script>
+        function update() {
+            if (!gameRunning) return;
+            
+            let dx = mouse.x - circle.x;
+            let dy = mouse.y - circle.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance <= circle.hitboxRadius) {
+                gameOver();
+                return;
+            }
+            
+            circle.speedX *= circle.speedMul;
+            circle.speedY *= circle.speedMul;
+            
+            let randomOffsetX = (Math.random() - 0.5) * 1;
+            let randomOffsetY = (Math.random() - 0.5) * 1;
+            
+            circle.speedX += (dx + randomOffsetX) * circle.acc;
+            circle.speedY += (dy + randomOffsetY) * circle.acc;
+            
+            circle.x += circle.speedX;
+            circle.y += circle.speedY;
+            
+            if (circle.x < circle.radius) {
+                circle.x = circle.radius;
+                circle.speedX = -circle.speedX * circle.bounceStr;
+            } else if (circle.x > canvas.width - circle.radius) {
+                circle.x = canvas.width - circle.radius;
+                circle.speedX = -circle.speedX * circle.bounceStr;
+            }
+            
+            if (circle.y < circle.radius) {
+                circle.y = circle.radius;
+                circle.speedY = -circle.speedY * circle.bounceStr;
+            } else if (circle.y > canvas.height - circle.radius) {
+                circle.y = canvas.height - circle.radius;
+                circle.speedY = -circle.speedY * circle.bounceStr;
+            }
+            
+            score = ((Date.now() - startTime) / 1000).toFixed(2);
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
+            ctx.beginPath();
+            ctx.arc(circle.x, circle.y, circle.hitboxRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "blue";
+            ctx.beginPath();
+            ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText(`Score: ${score} sec`, 20, 30);
+        }
+        
+        function gameLoop() {
+            update();
+            draw();
+            if (gameRunning) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            gameOverScreen.style.display = "flex";
+            finalScoreDisplay.textContent = score;
+        }
+        
+        function restartGame() {
+            gameOverScreen.style.display = "none";
+            circle.x = Math.random() * canvas.width;
+            circle.y = Math.random() * canvas.height;
+            circle.speedX = 0;
+            circle.speedY = 0;
+            gameRunning = true;
+            startTime = Date.now();
+            gameLoop();
+        }
+        
+        restartGame();
+    </script>
 </body>
 </html>
+
