@@ -394,28 +394,49 @@
     width: 100%;
     height: 220px;
     position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
   }
-
-  .card-flip.flipped { transform: rotateY(180deg); }
 
   .card-face {
     position: absolute;
     inset: 0;
-    backface-visibility: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+    transition: opacity 0.15s ease, transform 0.4s cubic-bezier(0.4,0,0.2,1);
   }
 
   .card-back {
     background: var(--card);
     border: 1px solid var(--border);
+    opacity: 1;
+    transform: rotateY(0deg) scale(1);
   }
+
+  .card-back.hidden {
+    opacity: 0;
+    transform: rotateY(90deg) scale(0.95);
+    pointer-events: none;
+  }
+
+  .card-front {
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    box-shadow: var(--glow);
+    opacity: 0;
+    transform: rotateY(-90deg) scale(0.95);
+    pointer-events: none;
+  }
+
+  .card-front.visible {
+    opacity: 1;
+    transform: rotateY(0deg) scale(1);
+    pointer-events: auto;
+  }
+
+  .card-flip.flipped { cursor: default; }
 
   .card-back .lock-icon {
     font-size: 48px;
@@ -429,13 +450,6 @@
     letter-spacing: 3px;
     color: var(--muted);
     animation: pulse-border 2s ease-in-out infinite;
-  }
-
-  .card-front {
-    background: var(--surface);
-    border: 2px solid var(--accent);
-    transform: rotateY(180deg);
-    box-shadow: var(--glow);
   }
 
   .card-front.imposter {
@@ -466,6 +480,20 @@
   .card-topic.imposter-topic {
     color: var(--accent2);
     text-shadow: 0 0 20px rgba(255,60,110,0.5);
+  }
+
+  .card-theme {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    margin-bottom: 4px;
+    opacity: 0.8;
+    min-height: 14px;
+  }
+
+  .card-front.imposter .card-theme {
+    color: var(--accent2);
   }
 
   .card-sub {
@@ -765,7 +793,7 @@
   <div id="setupScreen">
     <div class="header">
       <div class="header-badge">CLASSIFIED OPERATION</div>
-      <h1>SPY</h1>
+      <h1>SPY<br>GAME</h1>
       <p class="header-sub">WHO IS THE IMPOSTER AMONG YOU?</p>
     </div>
 
@@ -795,9 +823,9 @@
         <div class="topic-tags" id="topicTags"></div>
         <div class="preset-row">
           <span class="preset-label">QUICK LOAD:</span>
-          <button class="preset-btn" onclick="loadPreset('locations')">🌍 LOCATIONS</button>
+          <button class="preset-btn" onclick="loadPreset('bible')">📖 BIBLE BOOKS</button>
           <button class="preset-btn" onclick="loadPreset('jobs')">💼 OCCUPATIONS</button>
-          <button class="preset-btn" onclick="loadPreset('objects')">🎯 OBJECTS</button>
+          <button class="preset-btn" onclick="loadPreset('politics')">🏛️ POLITICIANS</button>
           <button class="preset-btn" onclick="loadPreset('movies')">🎬 MOVIES</button>
         </div>
       </div>
@@ -824,6 +852,7 @@
         </div>
         <div class="card-face card-front" id="cardFront">
           <div class="card-role" id="cardRole"></div>
+          <div class="card-theme" id="cardTheme"></div>
           <div class="card-topic" id="cardTopic"></div>
           <div class="card-sub" id="cardSub"></div>
         </div>
@@ -892,11 +921,26 @@
 
 <script>
   const PRESETS = {
-    locations: ['Beach','Airport','Casino','Hospital','Library','Submarine','Space Station','Medieval Castle','Circus','Pirate Ship','Train','Bank','Cinema','Restaurant','School'],
-    jobs: ['Doctor','Pilot','Chef','Spy','Teacher','Police Officer','Actor','Engineer','Journalist','Lawyer','Farmer','Astronaut','Firefighter','Sailor','Musician'],
-    objects: ['Diamond Ring','Ancient Sword','Magic Lamp','Time Machine','Treasure Map','Golden Key','Crystal Ball','Stolen Painting','Secret Formula','Black Briefcase'],
-    movies: ['Titanic','The Matrix','Inception','Interstellar','The Godfather','Parasite','Avatar','Pulp Fiction','The Dark Knight','Jurassic Park']
+    bible: {
+      theme: 'BIBLE BOOKS',
+      items: ['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Esther','Job','Psalms','Proverbs','Ecclesiastes','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Jonah','Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians','2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians','2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James','1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation']
+    },
+    jobs: {
+      theme: 'OCCUPATIONS',
+      items: ['Doctor','Pilot','Chef','Spy','Teacher','Police Officer','Actor','Engineer','Journalist','Lawyer','Farmer','Astronaut','Firefighter','Sailor','Musician']
+    },
+    politics: {
+      theme: 'POLITICIANS',
+      items: ['Victor Orban','Donald Trump','Boris Johnson','Keir Starmer','Margaret Thatcher','Putin','Xi Jinping','Kim Jong Un','Kamala Harris','Barack Obama','John F Kennedy','Nixon','John Major','Nigel Farage','Rupert Lowe','Ronald Reagan','Rishi Sunak','Benjamin Netanyahu','Tony Blair','Rory Stewart','Winston Churchill','Kemi Badenoch','Ed Miliband']
+    },
+    movies: {
+      theme: 'MOVIES',
+      items: ['Titanic','The Matrix','Inception','Interstellar','The Godfather','Parasite','Avatar','Pulp Fiction','The Dark Knight','Jurassic Park']
+    }
   };
+
+  // Track which theme the current topics came from (for imposter hint)
+  let currentThemeLabel = '';
 
   let topics = [];
   let gameRoles = [];   // array of {player, role, topic}
@@ -937,7 +981,10 @@
   }
 
   function loadPreset(key) {
-    PRESETS[key].forEach(t => {
+    const preset = PRESETS[key];
+    if (!preset) return;
+    currentThemeLabel = preset.theme;
+    preset.items.forEach(t => {
       if (!topics.includes(t)) topics.push(t);
     });
     renderTags();
@@ -1012,15 +1059,17 @@
     cardRevealed = false;
     const flip = document.getElementById('cardFlip');
     flip.classList.remove('flipped');
-    flip.style.cursor = 'pointer';
+
+    const back = flip.querySelector('.card-back');
+    const front = document.getElementById('cardFront');
+    back.classList.remove('hidden');
+    front.classList.remove('visible', 'imposter');
 
     document.getElementById('playerName').textContent = `AGENT ${gameRoles[currentPlayer].player}`;
 
-    // Reset front
-    const front = document.getElementById('cardFront');
-    front.classList.remove('imposter');
     document.getElementById('cardRole').textContent = '';
     document.getElementById('cardTopic').textContent = '';
+    document.getElementById('cardTheme').textContent = '';
     document.getElementById('cardSub').textContent = '';
 
     document.getElementById('btnNext').style.display = 'none';
@@ -1034,35 +1083,44 @@
     cardRevealed = true;
 
     const g = gameRoles[currentPlayer];
+    const flip = document.getElementById('cardFlip');
+    const back = flip.querySelector('.card-back');
     const front = document.getElementById('cardFront');
-    const roleEl = document.getElementById('cardRole');
-    const topicEl = document.getElementById('cardTopic');
-    const subEl = document.getElementById('cardSub');
 
+    // Populate front content
     if (g.role === 'imposter') {
       front.classList.add('imposter');
-      roleEl.innerHTML = `<span class="role-imposter">▲ IMPOSTER ▲</span>`;
+      document.getElementById('cardRole').innerHTML = `<span class="role-imposter">▲ IMPOSTER ▲</span>`;
+      const topicEl = document.getElementById('cardTopic');
       topicEl.className = 'card-topic imposter-topic';
       topicEl.textContent = 'YOU ARE THE SPY';
-      subEl.textContent = 'BLEND IN. FIGURE OUT THE TOPIC.';
+      document.getElementById('cardTheme').textContent = currentThemeLabel ? `THEME: ${currentThemeLabel}` : '';
+      document.getElementById('cardSub').textContent = 'BLEND IN. FIGURE OUT THE TOPIC.';
     } else {
       front.classList.remove('imposter');
-      roleEl.innerHTML = `<span class="role-spy">● AGENT ●</span>`;
+      document.getElementById('cardRole').innerHTML = `<span class="role-spy">● AGENT ●</span>`;
+      const topicEl = document.getElementById('cardTopic');
       topicEl.className = 'card-topic spy-topic';
       topicEl.textContent = g.topic.toUpperCase();
-      subEl.textContent = 'FIND THE IMPOSTER AMONG YOU';
+      document.getElementById('cardTheme').textContent = 'THE TOPIC IS';
+      document.getElementById('cardSub').textContent = 'FIND THE IMPOSTER AMONG YOU';
     }
 
-    document.getElementById('cardFlip').classList.add('flipped');
-    document.getElementById('cardFlip').style.cursor = 'default';
+    // Animate: fade back out, then fade front in
+    back.classList.add('hidden');
+    setTimeout(() => {
+      front.classList.add('visible');
+      flip.classList.add('flipped');
+    }, 200);
 
     const isLast = currentPlayer === gameRoles.length - 1;
-    if (isLast) {
-      document.getElementById('btnResults').style.display = 'block';
-    } else {
-      document.getElementById('btnNext').style.display = 'block';
-    }
-
+    setTimeout(() => {
+      if (isLast) {
+        document.getElementById('btnResults').style.display = 'block';
+      } else {
+        document.getElementById('btnNext').style.display = 'block';
+      }
+    }, 450);
   }
 
   function nextPlayer() {
@@ -1105,6 +1163,7 @@
     document.getElementById('gameScreen').style.display = 'none';
     document.getElementById('discussionScreen').style.display = 'none';
     document.getElementById('resultsScreen').style.display = 'none';
+    currentThemeLabel = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
