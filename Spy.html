@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPY GAME</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #2a2a3d;
+    --accent: #00ff88;
+    --accent2: #ff3c6e;
+    --accent3: #ffd700;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --glow: 0 0 20px rgba(0,255,136,0.3);
+    --glow-red: 0 0 20px rgba(255,60,110,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .header-badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 14px;
+    margin-bottom: 16px;
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .header h1 {
+    font-family: 'Black Ops One', cursive;
+    font-size: clamp(52px, 12vw, 96px);
+    line-height: 0.9;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 0 30px rgba(0,255,136,0.4));
+  }
+
+  .header-sub {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 3px;
+    margin-top: 12px;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+
+  .panel-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── INPUTS ── */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field label {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .field input[type="number"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  .field input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  /* ── TOPIC AREA ── */
+  .topic-area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .topic-input-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .topic-input-row input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 11px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .topic-input-row input:focus {
+    border-color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  .topic-input-row input::placeholder {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .btn-add {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    width: 46px;
+    height: 46px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .btn-add:hover {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: var(--glow);
+  }
+
+  .topic-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 40px;
+  }
+
+  .tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,255,136,0.07);
+    border: 1px solid rgba(0,255,136,0.25);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 5px 12px;
+    animation: tag-in 0.2s ease;
+  }
+
+  @keyframes tag-in {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .tag-remove {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.15s;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+
+  .tag-remove:hover { color: var(--accent2); }
+
+  .preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .preset-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    width: 100%;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .preset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .preset-btn:hover {
+    border-color: var(--accent3);
+    color: var(--accent3);
+  }
+
+  /* ── START BUTTON ── */
+  .btn-start {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Black Ops One', cursive;
+    font-size: 22px;
+    letter-spacing: 4px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-start::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.4s;
+  }
+
+  .btn-start:hover::after { transform: translateX(100%); }
+  .btn-start:hover { box-shadow: var(--glow); transform: translateY(-1px); }
+  .btn-start:active { transform: translateY(0); }
+
+  /* ── GAME SCREEN ── */
+  #gameScreen { display: none; }
+
+  .progress-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .progress-pip {
+    height: 4px;
+    flex: 1;
+    background: var(--border);
+    transition: background 0.3s;
+    min-width: 8px;
+  }
+
+  .progress-pip.done { background: var(--accent); }
+  .progress-pip.current { background: var(--accent3); animation: pip-blink 1s ease-in-out infinite; }
+
+  @keyframes pip-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .player-turn {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .player-turn .turn-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .player-turn .player-name {
+    font-family: 'Black Ops One', cursive;
+    font-size: 36px;
+    color: var(--text);
+  }
+
+  /* ── REVEAL CARD ── */
+  .reveal-area {
+    perspective: 1000px;
+    margin-bottom: 28px;
+  }
+
+  .card-flip {
+    width: 100%;
+    height: 220px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .card-flip.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  }
+
+  .card-back {
+    background: var(--card);
+    border: 1px solid var(--border);
+  }
+
+  .card-back .lock-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 10px rgba(0,255,136,0.3));
+  }
+
+  .card-back .tap-hint {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+
+  .card-front {
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    transform: rotateY(180deg);
+    box-shadow: var(--glow);
+  }
+
+  .card-front.imposter {
+    border-color: var(--accent2);
+    box-shadow: var(--glow-red);
+    background: rgba(255,60,110,0.05);
+  }
+
+  .card-role {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    margin-bottom: 12px;
+  }
+
+  .card-front .role-spy { color: var(--accent); }
+  .card-front .role-imposter { color: var(--accent2); }
+
+  .card-topic {
+    font-family: 'Black Ops One', cursive;
+    font-size: clamp(28px, 6vw, 48px);
+    text-align: center;
+    padding: 0 20px;
+    line-height: 1.1;
+  }
+
+  .card-topic.spy-topic { color: var(--text); }
+  .card-topic.imposter-topic {
+    color: var(--accent2);
+    text-shadow: 0 0 20px rgba(255,60,110,0.5);
+  }
+
+  .card-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 10px;
+    letter-spacing: 2px;
+  }
+
+  /* ── NEXT / RESULTS BUTTONS ── */
+  .game-btn {
+    width: 100%;
+    border: none;
+    font-family: 'Black Ops One', cursive;
+    font-size: 18px;
+    letter-spacing: 3px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+    display: none;
+  }
+
+  .btn-next {
+    background: transparent;
+    border: 1px solid var(--accent) !important;
+    color: var(--accent);
+  }
+
+  .btn-next:hover {
+    background: rgba(0,255,136,0.1);
+    box-shadow: var(--glow);
+  }
+
+  .btn-results {
+    background: var(--accent3);
+    color: var(--bg);
+  }
+
+  .btn-results:hover {
+    box-shadow: 0 0 20px rgba(255,215,0,0.4);
+    transform: translateY(-1px);
+  }
+
+  /* ── RESULTS SCREEN ── */
+  #resultsScreen { display: none; }
+
+  .results-title {
+    font-family: 'Black Ops One', cursive;
+    font-size: 48px;
+    text-align: center;
+    margin-bottom: 8px;
+    color: var(--accent3);
+    filter: drop-shadow(0 0 20px rgba(255,215,0,0.4));
+  }
+
+  .results-sub {
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    margin-bottom: 32px;
+  }
+
+  .result-topic-box {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    text-align: center;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    box-shadow: var(--glow);
+  }
+
+  .result-topic-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .result-topic-name {
+    font-family: 'Black Ops One', cursive;
+    font-size: 36px;
+    color: var(--text);
+  }
+
+  .imposters-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .imposter-item {
+    background: rgba(255,60,110,0.08);
+    border: 1px solid rgba(255,60,110,0.3);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .imposter-icon { font-size: 20px; }
+
+  .imposter-name {
+    font-size: 18px;
+    color: var(--accent2);
+    font-weight: 700;
+  }
+
+  .imposter-badge {
+    margin-left: auto;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    padding: 2px 8px;
+    opacity: 0.7;
+  }
+
+  .btn-restart {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-restart:hover {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  /* ── VALIDATION ERROR ── */
+  .error-msg {
+    background: rgba(255,60,110,0.1);
+    border: 1px solid rgba(255,60,110,0.4);
+    color: var(--accent2);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 10px 16px;
+    display: none;
+    margin-top: 12px;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in { animation: fade-in 0.4s ease; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 480px) {
+    .field-row { grid-template-columns: 1fr; }
+    .panel { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen">
+    <div class="header">
+      <div class="header-badge">CLASSIFIED OPERATION</div>
+      <h1>SPY<br>GAME</h1>
+      <p class="header-sub">WHO IS THE IMPOSTER AMONG YOU?</p>
+    </div>
+
+    <!-- Players & Imposters -->
+    <div class="panel">
+      <div class="panel-label">MISSION PARAMETERS</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Number of Players</label>
+          <input type="number" id="numPlayers" min="2" max="20" value="4" />
+        </div>
+        <div class="field">
+          <label>Number of Imposters</label>
+          <input type="number" id="numImposters" min="1" max="10" value="1" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Topics -->
+    <div class="panel">
+      <div class="panel-label">TOPICS / TARGETS</div>
+      <div class="topic-area">
+        <div class="topic-input-row">
+          <input type="text" id="topicInput" placeholder="Add a topic or location..." maxlength="40" />
+          <button class="btn-add" onclick="addTopic()">+</button>
+        </div>
+        <div class="topic-tags" id="topicTags"></div>
+        <div class="preset-row">
+          <span class="preset-label">QUICK LOAD:</span>
+          <button class="preset-btn" onclick="loadPreset('locations')">🌍 LOCATIONS</button>
+          <button class="preset-btn" onclick="loadPreset('jobs')">💼 OCCUPATIONS</button>
+          <button class="preset-btn" onclick="loadPreset('objects')">🎯 OBJECTS</button>
+          <button class="preset-btn" onclick="loadPreset('movies')">🎬 MOVIES</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+    <button class="btn-start" onclick="startGame()">BEGIN MISSION</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="player-turn">
+      <div class="turn-label">NOW VIEWING</div>
+      <div class="player-name" id="playerName">AGENT 1</div>
+    </div>
+
+    <div class="reveal-area">
+      <div class="card-flip" id="cardFlip" onclick="flipCard()">
+        <div class="card-face card-back">
+          <div class="lock-icon">🔒</div>
+          <div class="tap-hint">TAP TO REVEAL</div>
+        </div>
+        <div class="card-face card-front" id="cardFront">
+          <div class="card-role" id="cardRole"></div>
+          <div class="card-topic" id="cardTopic"></div>
+          <div class="card-sub" id="cardSub"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="game-btn btn-next" id="btnNext" onclick="nextPlayer()">PASS TO NEXT AGENT ▶</button>
+    <button class="game-btn btn-results" id="btnResults" onclick="showResults()">VIEW MISSION BRIEF ▶</button>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="resultsScreen">
+    <div class="results-title">MISSION<br>BRIEF</div>
+    <div class="results-sub">ALL AGENTS HAVE RECEIVED THEIR ASSIGNMENTS</div>
+
+    <div class="result-topic-box">
+      <div class="result-topic-label">THE TOPIC WAS</div>
+      <div class="result-topic-name" id="revealTopic"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">IMPOSTERS</div>
+      <div class="imposters-list" id="impostersList"></div>
+    </div>
+
+    <button class="btn-start" style="margin-bottom:12px;" onclick="replayGame()">▶ PLAY AGAIN (SAME SETTINGS)</button>
+    <button class="btn-restart" onclick="resetAll()">↩ CHANGE SETTINGS</button>
+  </div>
+
+</div>
+
+<script>
+  const PRESETS = {
+    locations: ['Beach','Airport','Casino','Hospital','Library','Submarine','Space Station','Medieval Castle','Circus','Pirate Ship','Train','Bank','Cinema','Restaurant','School'],
+    jobs: ['Doctor','Pilot','Chef','Spy','Teacher','Police Officer','Actor','Engineer','Journalist','Lawyer','Farmer','Astronaut','Firefighter','Sailor','Musician'],
+    objects: ['Diamond Ring','Ancient Sword','Magic Lamp','Time Machine','Treasure Map','Golden Key','Crystal Ball','Stolen Painting','Secret Formula','Black Briefcase'],
+    movies: ['Titanic','The Matrix','Inception','Interstellar','The Godfather','Parasite','Avatar','Pulp Fiction','The Dark Knight','Jurassic Park']
+  };
+
+  let topics = [];
+  let gameRoles = [];   // array of {player, role, topic}
+  let currentPlayer = 0;
+  let cardRevealed = false;
+  let savedTopic = '';
+
+  /* ── TOPIC MANAGEMENT ── */
+  function addTopic(val) {
+    const input = document.getElementById('topicInput');
+    const value = (val || input.value).trim();
+    if (!value) return;
+    if (topics.includes(value)) { input.value = ''; return; }
+    topics.push(value);
+    renderTags();
+    input.value = '';
+    input.focus();
+  }
+
+  document.getElementById('topicInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTopic();
+  });
+
+  function removeTopic(t) {
+    topics = topics.filter(x => x !== t);
+    renderTags();
+  }
+
+  function renderTags() {
+    const container = document.getElementById('topicTags');
+    container.innerHTML = '';
+    topics.forEach(t => {
+      const tag = document.createElement('div');
+      tag.className = 'tag';
+      tag.innerHTML = `<span>${t}</span><button class="tag-remove" onclick="removeTopic('${t.replace(/'/g, "\\'")}')">✕</button>`;
+      container.appendChild(tag);
+    });
+  }
+
+  function loadPreset(key) {
+    PRESETS[key].forEach(t => {
+      if (!topics.includes(t)) topics.push(t);
+    });
+    renderTags();
+  }
+
+  /* ── GAME LOGIC ── */
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = '⚠ ' + msg;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+  }
+
+  function startGame() {
+    const players = parseInt(document.getElementById('numPlayers').value);
+    const imposters = parseInt(document.getElementById('numImposters').value);
+    if (isNaN(players) || players < 2) return showError('YOU NEED AT LEAST 2 AGENTS');
+    if (isNaN(imposters) || imposters < 1) return showError('YOU NEED AT LEAST 1 IMPOSTER');
+    if (imposters >= players) return showError('IMPOSTERS MUST BE FEWER THAN AGENTS');
+    if (topics.length === 0) return showError('ADD AT LEAST ONE TOPIC FIRST');
+
+    const topic = topics[Math.floor(Math.random() * topics.length)];
+    savedTopic = topic;
+
+    // Build roles array
+    let roles = [];
+    for (let i = 0; i < imposters; i++) roles.push('imposter');
+    for (let i = 0; i < players - imposters; i++) roles.push('spy');
+    // Shuffle
+    for (let i = roles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [roles[i], roles[j]] = [roles[j], roles[i]];
+    }
+
+    gameRoles = roles.map((r, i) => ({ player: i + 1, role: r, topic }));
+    currentPlayer = 0;
+    cardRevealed = false;
+
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'block';
+    document.getElementById('resultsScreen').style.display = 'none';
+
+    buildProgressBar(players);
+    loadPlayerCard();
+  }
+
+  function replayGame() {
+    startGame();
+  }
+
+  function buildProgressBar(n) {
+    const bar = document.getElementById('progressBar');
+    bar.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'progress-pip' + (i === 0 ? ' current' : '');
+      pip.id = `pip-${i}`;
+      bar.appendChild(pip);
+    }
+  }
+
+  function updateProgressBar() {
+    gameRoles.forEach((_, i) => {
+      const pip = document.getElementById(`pip-${i}`);
+      if (i < currentPlayer) pip.className = 'progress-pip done';
+      else if (i === currentPlayer) pip.className = 'progress-pip current';
+      else pip.className = 'progress-pip';
+    });
+  }
+
+  function loadPlayerCard() {
+    cardRevealed = false;
+    const flip = document.getElementById('cardFlip');
+    flip.classList.remove('flipped');
+    flip.style.cursor = 'pointer';
+
+    document.getElementById('playerName').textContent = `AGENT ${gameRoles[currentPlayer].player}`;
+
+    // Reset front
+    const front = document.getElementById('cardFront');
+    front.classList.remove('imposter');
+    document.getElementById('cardRole').textContent = '';
+    document.getElementById('cardTopic').textContent = '';
+    document.getElementById('cardSub').textContent = '';
+
+    document.getElementById('btnNext').style.display = 'none';
+    document.getElementById('btnResults').style.display = 'none';
+
+    updateProgressBar();
+  }
+
+  function flipCard() {
+    if (cardRevealed) return;
+    cardRevealed = true;
+
+    const g = gameRoles[currentPlayer];
+    const front = document.getElementById('cardFront');
+    const roleEl = document.getElementById('cardRole');
+    const topicEl = document.getElementById('cardTopic');
+    const subEl = document.getElementById('cardSub');
+
+    if (g.role === 'imposter') {
+      front.classList.add('imposter');
+      roleEl.innerHTML = `<span class="role-imposter">▲ IMPOSTER ▲</span>`;
+      topicEl.className = 'card-topic imposter-topic';
+      topicEl.textContent = 'YOU ARE THE SPY';
+      subEl.textContent = 'BLEND IN. FIGURE OUT THE TOPIC.';
+    } else {
+      front.classList.remove('imposter');
+      roleEl.innerHTML = `<span class="role-spy">● AGENT ●</span>`;
+      topicEl.className = 'card-topic spy-topic';
+      topicEl.textContent = g.topic.toUpperCase();
+      subEl.textContent = 'FIND THE IMPOSTER AMONG YOU';
+    }
+
+    document.getElementById('cardFlip').classList.add('flipped');
+    document.getElementById('cardFlip').style.cursor = 'default';
+
+    const isLast = currentPlayer === gameRoles.length - 1;
+    if (isLast) {
+      document.getElementById('btnResults').style.display = 'block';
+    } else {
+      document.getElementById('btnNext').style.display = 'block';
+    }
+  }
+
+  function nextPlayer() {
+    currentPlayer++;
+    loadPlayerCard();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showResults() {
+    document.getElementById('gameScreen').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'block';
+    document.getElementById('revealTopic').textContent = savedTopic.toUpperCase();
+
+    const list = document.getElementById('impostersList');
+    list.innerHTML = '';
+    const imposters = gameRoles.filter(g => g.role === 'imposter');
+    imposters.forEach(g => {
+      const el = document.createElement('div');
+      el.className = 'imposter-item fade-in';
+      el.innerHTML = `
+        <span class="imposter-icon">🕵️</span>
+        <span class="imposter-name">AGENT ${g.player}</span>
+        <span class="imposter-badge">IMPOSTER</span>
+      `;
+      list.appendChild(el);
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetAll() {
+    document.getElementById('setupScreen').style.display = 'block';
+    document.getElementById('gameScreen').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
