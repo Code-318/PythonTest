@@ -14,5 +14,9 @@ const PRESETS = {
     movies: {
       theme: 'MOVIES',
       items: ['Titanic','The Matrix','Inception','Interstellar','The Godfather','Parasite','Avatar','Pulp Fiction','The Dark Knight','Jurassic Park']
+    },
+    characters: {
+      theme: 'CHARACTERS',
+      items: ['Moses', 'Esther', 'Daniel', 'Samuel', 'Solomon', 'David', 'Jesus', 'Paul', 'Noah', 'Adam', 'Ruth', 'Eve', 'Naomi', 'Abraham', 'Job', 'John', 'Zacchaeus', 'Issac', 'Joseph', 'Mary', 'Samson', 'Elijah', 'Judas', 'Stephen', 'Saul', 'Gideon', 'Melchizede', 'Cain']
     }
   };
